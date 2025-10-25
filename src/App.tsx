@@ -160,10 +160,6 @@ export const App: React.FC = () => {
     const completedIds = completedTodos.map(todo => todo.id);
     const prevTodos = todos;
 
-    setTodos(currentTodos =>
-      currentTodos.filter(todo => !completedIds.includes(todo.id)),
-    );
-
     Promise.allSettled(completedIds.map(id => removeTodo(id)))
       .then(results => {
         // Check which deletions failed
@@ -176,14 +172,16 @@ export const App: React.FC = () => {
           .map(item => item.id);
 
         if (failedIds.length > 0) {
-          const todosToRestore = prevTodos.filter(todo =>
-            failedIds.includes(todo.id),
-          );
-
-          setTodos(current => [...current, ...todosToRestore]);
           setErrorMessage(ErrorType.DeleteTodoError);
-          hideError();
         }
+
+        setTodos(
+          prevTodos.filter(
+            todo =>
+              !completedIds.includes(todo.id) || failedIds.includes(todo.id),
+          ),
+        );
+        hideError();
       })
       .finally(() => {
         setLoading(false);
